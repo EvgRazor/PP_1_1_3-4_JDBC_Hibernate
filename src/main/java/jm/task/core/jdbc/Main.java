@@ -1,32 +1,38 @@
 package jm.task.core.jdbc;
 
 import jm.task.core.jdbc.dao.UserDaoJDBCImpl;
+import jm.task.core.jdbc.service.UserService;
+import jm.task.core.jdbc.service.UserServiceImpl;
+import jm.task.core.jdbc.util.Util;
 
 import java.lang.reflect.Array;
+import java.sql.SQLException;
 import java.util.Arrays;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 
 
-        UserDaoJDBCImpl userDaoJDBC = new UserDaoJDBCImpl();
 
-        userDaoJDBC.createUsersTable(); //Создание таблицы
+        UserService userService = new UserServiceImpl();
 
-        userDaoJDBC.saveUser("Вася", "Васенька", (byte)25); // добавления
-        userDaoJDBC.saveUser("Петя", "Петров", (byte)45); // добавления
-        userDaoJDBC.saveUser("Стас", "Максимов", (byte)19); // добавления
-        userDaoJDBC.saveUser("Максим", "Максимыч", (byte)38); // добавления
-        userDaoJDBC.saveUser("Стас", "Максимов", (byte)19); // добавления
-        userDaoJDBC.saveUser("Максим", "Максимыч", (byte)38); // добавления
+        userService.createUsersTable(); //Создание таблицы
 
-        System.out.println(userDaoJDBC.getAllUsers()); // вывод юзеров
+        userService.saveUser("Вася", "Васенька", (byte)25);
+        userService.saveUser("Петя", "Петров", (byte)45);
+        userService.saveUser("Стас", "Максимов", (byte)19);
+        userService.saveUser("Максим", "Максимыч", (byte)38);
+        userService.saveUser("Стас", "Максимов", (byte)19);
+        userService.saveUser("Максим", "Максимыч", (byte)38);
 
-        //userDaoJDBC.removeUserById(1); // удаление по ID
+        System.out.println(userService.getAllUsers()); // вывод юзеров
+        
+        userService.cleanUsersTable(); //  очистка таблицы User(ов)
 
-        userDaoJDBC.cleanUsersTable(); //  очистка таблицы User(ов)
+        userService.dropUsersTable(); // удаление таблицы
 
-       userDaoJDBC.dropUsersTable(); // удаление таблицы
+        Util.getClosedConnection();
+
 
 
 

@@ -8,26 +8,18 @@ import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
 
-    private Util util = new Util(); // подключение к БД
-    private User user = new User(); // класс дял работы с юзерами
-    private String nameTable = "User"; // имя таблицы
-    private String tableYN = "SHOW TABLES LIKE '"+nameTable+"'"; // запрос на проверку существования таблицы
-    private String createUsersTableStr = "CREATE TABLE " +nameTable+ " ( id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR (255), lastname VARCHAR (255), age INT );"; // создание таблицы для User
-    private String dropUsersTableStr = "DROP TABLE " + nameTable; // // Удаление таблицы User(ов)
-    private String saveUserStr = "INSERT "+ nameTable +"(id, name, lastname, age) VALUES (?,?,?,?);"; // добавления юзера в таблицу
-    private String removeUserByIdStr = "DELETE FROM "+nameTable+" where id = "; // удаления юзера по id
-    private String getAllUsersStr = "SELECT * FROM "+nameTable; //  получение всех юзеров с таблицы
-    private String cleanUsersTableStr = "DELETE FROM "+nameTable; //  очистить таблицу
-
+    private Connection connection = Util.getConnection();
+    // не очень  понял, если у нас Util имеет static метод. Мы же могли сразу писать в методах ниже Util.getConnection().....
+    // подскажите пожалуйста, для чего вы посоветовали вынести в поля Connection? (или я неправильно понял реализацию совета))
 
     public UserDaoJDBCImpl() {
 
     }
 
     public void createUsersTable()  { // создание таблицы для User
-        try (Statement statement = util.getConnection().createStatement(); ResultSet resultSet =  statement.executeQuery(tableYN);) {
+        try (Statement statement = connection.createStatement(); ResultSet resultSet =  statement.executeQuery("SHOW TABLES LIKE 'User'");) {
             if (!resultSet.next()) {
-                statement.execute(createUsersTableStr);
+                statement.execute("CREATE TABLE User ( id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR (255), lastname VARCHAR (255), age INT );");
             }
         } catch (SQLException sqlException) {
             System.out.println("Ошибка при проверке на существование  " + sqlException.getMessage());
@@ -35,8 +27,8 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void dropUsersTable() { // Удаление таблицы User(ов)
-        try (Statement statement = util.getConnection().createStatement();){
-            statement.executeUpdate(dropUsersTableStr);
+        try (Statement statement = connection.createStatement();){
+            statement.executeUpdate("DROP TABLE User");
             System.out.println("Удалили таблицу");
         } catch (SQLException sqlException){
 
@@ -44,7 +36,7 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void saveUser(String name, String lastName, byte age) { // добавления юзера в таблицу
-        try ( PreparedStatement preparedStatement = util.getConnection().prepareStatement(saveUserStr)){
+        try ( PreparedStatement preparedStatement = connection.prepareStatement("INSERT User(id, name, lastname, age) VALUES (?,?,?,?);")){
                 preparedStatement.setInt(1, 0);
                 preparedStatement.setString(2, name);
                 preparedStatement.setString(3, lastName);
@@ -57,16 +49,18 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void removeUserById(long id) { // удаления юзера по id
-        try (Statement statement = util.getConnection().createStatement()) {
-            statement.executeUpdate(removeUserByIdStr+id);
-        } catch (SQLException sqlException) {
-            System.out.println("Ошибка при удалении юзер : "+sqlException.getMessage());
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM User where id = ?")){
+             preparedStatement.setLong(1, id);
+        } catch (SQLException sqlException){
+            System.out.println("Ошибка при удалении : "+sqlException.getMessage());
         }
+
     }
 
     public List<User> getAllUsers() { // получение всех юзеров с таблицы
         List <User> userList = new ArrayList<>();
-        try (Statement statement = util.getConnection().createStatement(); ResultSet resultSet = statement.executeQuery(getAllUsersStr)){
+        try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT * FROM User")){
                 while (resultSet.next()) {
                     userList.add(new User(
                         resultSet.getString("name"),
@@ -82,8 +76,8 @@ public class UserDaoJDBCImpl implements UserDao {
 
 
     public void cleanUsersTable() { // очистить таблицу
-        try (Statement statement = util.getConnection().createStatement()){
-             statement.executeUpdate(cleanUsersTableStr);
+        try (Statement statement = connection.createStatement()){
+             statement.executeUpdate("DELETE FROM User");
         } catch (SQLException sqlException) {
             System.out.println("Ошибка при очистки такблицы " + sqlException.getMessage());
         }
